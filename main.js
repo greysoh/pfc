@@ -111,10 +111,11 @@ const url =
       }`;
 
 debug("INFO: Built url is '%s'.", url);
-debug("WARN: LAUNCH THE SIRENS!!!");
 
 const tunnelDestData = tunnel.dest.split(":");
 const port = tunnelDestData.length != 2 ? safeParseInt(prompt("What port would you like to listen on?")) : tunnelDestData[1]; // TODO
+
+debug("INFO: Starting...");
 
 console.log("Started at 'localhost:%s'", port);
 await connectToPassy(url, tunnel.passwords[0] ? tunnel.passwords[0] : prompt("What is the password for the tunnel?"), port);
