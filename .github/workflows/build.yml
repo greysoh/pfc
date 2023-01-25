@@ -1,0 +1,25 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v2
+      - name: Use Deno
+        uses: denolib/setup-deno@v2
+      - name: Build
+        run: deno compile --allow-net --allow-read --allow-write --allow-env index.js
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }}
+          path: pfc
