@@ -17,7 +17,7 @@ jobs:
       - name: Use Deno
         uses: denolib/setup-deno@v2
       - name: Build
-        run: deno compile --allow-net --allow-read --allow-write --allow-env index.js
+        run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
