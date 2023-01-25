@@ -81,7 +81,7 @@ if (tunnelChoice > tunnels.length || tunnelChoice <= 0) {
   Deno.exit(1);
 }
 
-console.log(tunnelChoice);
+debug("INFO: Selected tunnel index is '%s'.", tunnelChoice);
 
 const tunnel = tunnels[tunnelChoice - 1];
 if (!tunnel) {
