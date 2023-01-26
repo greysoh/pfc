@@ -18,13 +18,15 @@ jobs:
         uses: denoland/setup-deno@v1
       - name: Build
         run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
-      - name: Upload artifacts
+      - name: Upload artifacts (Posix)
         uses: actions/upload-artifact@v3
+        if: ${{ runner.os != "windows" }}
         with:
           name: ${{ runner.os }}
           path: pfc
-      - name: Upload artifacts (Windows) # Gotta love jank.
+      - name: Upload artifacts (Windows)
         uses: actions/upload-artifact@v3
+        if: ${{ runner.os == "windows" }}
         with:
           name: ${{ runner.os }}
           path: pfc.exe
