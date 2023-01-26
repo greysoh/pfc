@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3
+      - name: Use Deno
+        uses: denoland/setup-deno@v1
+      - name: Build
+        run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
+
+      - name: Upload binaries to release (Posix)
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ matrix.os != 'windows' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: pfc
+          asset_name: ${{ format('pfc-{0}', runner.os) }}
+          tag: ${{ github.ref }}
+  
+      - name: Upload binaries to release (Windows)
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ matrix.os == 'windows' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: pfc.exe
+          asset_name: ${{ format('pfc-{0}.exe', runner.os) }}
+          tag: ${{ github.ref }}
