@@ -23,7 +23,7 @@ jobs:
         run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
 
       - name: Upload binaries to release (Posix)
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.4.0
         if: ${{ matrix.os != 'windows-latest' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
           tag: ${{ github.ref }}
   
       - name: Upload binaries to release (Windows)
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.4.0
         if: ${{ matrix.os == 'windows-latest' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
