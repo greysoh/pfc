@@ -20,13 +20,13 @@ jobs:
         run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
       - name: Upload artifacts (Posix)
         uses: actions/upload-artifact@v3
-        if: ${{ matrix.os != 'windows' }}
+        if: ${{ matrix.os != 'windows-latest' }}
         with:
           name: ${{ runner.os }}
           path: pfc
       - name: Upload artifacts (Windows)
         uses: actions/upload-artifact@v3
-        if: ${{ matrix.os == 'windows' }}
+        if: ${{ matrix.os == 'windows-latest' }}
         with:
           name: ${{ runner.os }}
           path: pfc.exe
