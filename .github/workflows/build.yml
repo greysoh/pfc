@@ -24,7 +24,7 @@ jobs:
           name: ${{ runner.os }}
           path: pfc
       - name: Upload artifacts (Windows) # Gotta love jank.
-          uses: actions/upload-artifact@v3
-          with:
-            name: ${{ runner.os }}
-            path: pfc.exe
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }}
+          path: pfc.exe
