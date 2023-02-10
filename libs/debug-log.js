@@ -3,7 +3,5 @@
  * @param  {...any} argv Arguments for console.log
  */
 export function debug(...argv) {
-  if (Deno.env.get("DEBUG")) {
-    console.log(...argv)
-  }
+  if (Deno.args[0].includes("--debug")) console.log(...argv);
 }

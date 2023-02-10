@@ -21,7 +21,7 @@ jobs:
       - name: Use Deno
         uses: denoland/setup-deno@v1
       - name: Build
-        run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
+        run: deno compile --location="http://pfc.greysoh.example.com" --allow-net main.js
 
       - name: Upload binaries to release (Posix)
         uses: svenstaro/upload-release-action@2.4.0

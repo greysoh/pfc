@@ -17,7 +17,7 @@ jobs:
       - name: Use Deno
         uses: denoland/setup-deno@v1
       - name: Build
-        run: deno compile --allow-net --allow-read --allow-write --allow-env main.js
+        run: deno compile --location="http://pfc.greysoh.example.com" --allow-net main.js
       - name: Upload artifacts (Posix)
         uses: actions/upload-artifact@v3
         if: ${{ matrix.os != 'windows-latest' }}

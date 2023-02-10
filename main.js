@@ -9,10 +9,9 @@ import { welcome } from "./wcmsg.js";
 
 welcome();
 
-// Attempts to see if we need to set up the app
-try {
-  await Deno.readTextFile("./config.json");
-} catch (e) {
+if (Deno.args.includes("--clear")) localStorage.clear(); 
+
+if (!localStorage.getItem("endpoint")) {
   const url = prompt("Please specify an endpoint URL:");
 
   const modernTest = await get(url + "/api/v1/static/getScopes");
@@ -26,19 +25,14 @@ try {
     Deno.exit(1);
   }
 
-  await Deno.writeTextFile(
-    "./config.json",
-    JSON.stringify({
-      endpoint: url,
-    })
-  );
+  localStorage.setItem("endpoint", url);
 }
 
-const config = JSON.parse(await Deno.readTextFile("./config.json"));
-debug("INFO: Using '%s' as the base URL", config.endpoint);
+debug("INFO: Using '%s' as the base URL", localStorage.getItem("endpoint"));
 
-if (!config.token) {
-  const token = await post(config.endpoint + "/api/v1/users/login", {
+if (!localStorage.getItem("token")) {
+  console.log(localStorage.getItem("endpoint"));
+  const token = await post(localStorage.getItem("endpoint") + "/api/v1/users/login", {
     username: prompt("Username:"),
     password: prompt("Password:"),
   });
@@ -52,9 +46,12 @@ if (!config.token) {
     Deno.exit(1);
   }
 
-  config.token = token.data.data.token;
+  localStorage.setItem("token", token.data.data.token);
+}
 
-  await Deno.writeTextFile("./config.json", JSON.stringify(config));
+const config = {
+  endpoint: localStorage.getItem("endpoint"),
+  token: localStorage.getItem("token")
 }
 
 debug("INFO: Logged in. Fetching list of tunnels...");
