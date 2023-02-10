@@ -107,13 +107,14 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
   debug("INFO: Tunnel choice data:", tunnel);
   
   // Used for detecting the URL to use
-  const endpointURLObject = new URL(config.endpoint); // ChatGPT has forced my hand
-  const endpointSameAs = endpointURLObject.origin.replace("http", "ws").replace(/:.*$/, "");
+  const endpointUrlObject = new URL(config.endpoint);
+  const endpointProtocolAndHost = endpointUrlObject.origin.replace("http", "ws").split(":");
+  const endpointWebsocket = endpointProtocolAndHost.slice(0, -1).join(":");
   
   const url =
     tunnel.proxyUrlSettings.host !== "sameAs"
       ? tunnel.proxyUrlSettings.host
-      : endpointSameAs +
+      : endpointWebsocket +
         `${
           tunnel.proxyUrlSettings.port != 80 &&
           tunnel.proxyUrlSettings.port != 443
