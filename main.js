@@ -1,4 +1,4 @@
-import { post, isErr } from "./libs/BLT-Wrap.js";
+import { get, post, isErr } from "./libs/BLT-Wrap.js";
 import { handleAxiosError } from "./libs/Handler.js";
 import { debug } from "./libs/debug-log.js";
 
@@ -14,6 +14,18 @@ try {
   await Deno.readTextFile("./config.json");
 } catch (e) {
   const url = prompt("Please specify an endpoint URL:");
+
+  const modernTest = await get(url + "/api/v1/static/getScopes");
+
+  if (isErr(modernTest)) {
+    handleAxiosError(
+      token.response.status,
+      token.response.statusText,
+      token.response.data.error
+    );
+    Deno.exit(1);
+  }
+
   await Deno.writeTextFile(
     "./config.json",
     JSON.stringify({
@@ -95,12 +107,8 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
   debug("INFO: Tunnel choice data:", tunnel);
   
   // Used for detecting the URL to use
-  const endpointURLObject = new URL(config.endpoint);
-  
-  const endpointGarbage = endpointURLObject.origin.replace("http", "ws").split(":");
-  endpointGarbage.pop();
-  
-  const endpointSameAs = endpointGarbage.join(":");
+  const endpointURLObject = new URL(config.endpoint); // ChatGPT has forced my hand
+  const endpointSameAs = endpointURLObject.origin.replace("http", "ws").replace(/:.*$/, "");
   
   const url =
     tunnel.proxyUrlSettings.host !== "sameAs"
