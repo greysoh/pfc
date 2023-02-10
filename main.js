@@ -67,55 +67,68 @@ for (const tunnelIndex in tunnels) {
 
   console.log(
     "%s: %s (%s -> :%s)",
-    parseInt(tunnelIndex) + 1,
+    safeParseInt(tunnelIndex) + 1,
     tunnel.name,
     tunnel.dest,
     tunnel.proxyUrlSettings.port
   );
 }
 
-const tunnelChoice = safeParseInt(prompt("\n$:"));
+const tunnelChoices = prompt("\n$:").split(",").map((i) => i.trim());
 
-if (tunnelChoice > tunnels.length || tunnelChoice <= 0) {
-  console.log("Error: Your tunnel choice was out of range!");
-  Deno.exit(1);
+for (const tunnelChoiceUnparsed of tunnelChoices) {
+  const tunnelChoice = safeParseInt(tunnelChoiceUnparsed);
+
+  if (tunnelChoice > tunnels.length || tunnelChoice <= 0) {
+    console.log("Error: Your tunnel choice was out of range!");
+    Deno.exit(1);
+  }
+  
+  debug("INFO: Selected tunnel index is '%s'.", tunnelChoice);
+  
+  const tunnel = tunnels[tunnelChoice - 1];
+  if (!tunnel) {
+    console.log("Error: Unknown tunnel choice error.");
+    Deno.exit(1);
+  }
+  
+  debug("INFO: Tunnel choice data:", tunnel);
+  
+  // Used for detecting the URL to use
+  const endpointURLObject = new URL(config.endpoint);
+  
+  const endpointGarbage = endpointURLObject.origin.replace("http", "ws").split(":");
+  endpointGarbage.pop();
+  
+  const endpointSameAs = endpointGarbage.join(":");
+  
+  const url =
+    tunnel.proxyUrlSettings.host !== "sameAs"
+      ? tunnel.proxyUrlSettings.host
+      : endpointSameAs +
+        `${
+          tunnel.proxyUrlSettings.port != 80 &&
+          tunnel.proxyUrlSettings.port != 443
+            ? ":" + tunnel.proxyUrlSettings.port
+            : ""
+        }`;
+  
+  debug("INFO: Built url is '%s'.", url);
+  
+  const tunnelDestData = tunnel.dest.split(":");
+  const port = tunnelDestData.length != 2 ? safeParseInt(prompt("What port would you like to listen on?")) : tunnelDestData[1]; // TODO
+  
+  debug("INFO: Starting...");
+  
+  console.log("Started tunnel #%s at 'localhost:%s'", tunnelChoice, port);
+  
+  try {
+    connectToPassy(url, tunnel.passwords[0] ? tunnel.passwords[0] : prompt("What is the password for the tunnel?"), port);
+  } catch (e) {
+    console.error("Unhandled error in instance %s\n\n", tunnelChoice, e);
+  }
 }
 
-debug("INFO: Selected tunnel index is '%s'.", tunnelChoice);
-
-const tunnel = tunnels[tunnelChoice - 1];
-if (!tunnel) {
-  console.log("Error: Misc tunnel choice error. Try not breaking my app next time.");
-  Deno.exit(1);
+while (true) {
+  await new Promise((i) => setTimeout(i, 10000));
 }
-
-debug("INFO: Tunnel choice data:", tunnel);
-
-// Used for detecting the URL to use
-const endpointURLObject = new URL(config.endpoint);
-
-const endpointGarbage = endpointURLObject.origin.replace("http", "ws").split(":");
-endpointGarbage.pop();
-
-const endpointSameAs = endpointGarbage.join(":");
-
-const url =
-  tunnel.proxyUrlSettings.host !== "sameAs"
-    ? tunnel.proxyUrlSettings.host
-    : endpointSameAs +
-      `${
-        tunnel.proxyUrlSettings.port != 80 &&
-        tunnel.proxyUrlSettings.port != 443
-          ? ":" + tunnel.proxyUrlSettings.port
-          : ""
-      }`;
-
-debug("INFO: Built url is '%s'.", url);
-
-const tunnelDestData = tunnel.dest.split(":");
-const port = tunnelDestData.length != 2 ? safeParseInt(prompt("What port would you like to listen on?")) : tunnelDestData[1]; // TODO
-
-debug("INFO: Starting...");
-
-console.log("Started at 'localhost:%s'", port);
-await connectToPassy(url, tunnel.passwords[0] ? tunnel.passwords[0] : prompt("What is the password for the tunnel?"), port);
