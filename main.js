@@ -19,7 +19,9 @@ async function connectToPassyCatch(...argv) {
 
 if (Deno.args.includes("--clear")) localStorage.clear();
 
-if (!localStorage.getItem("endpoint")) {
+try {
+  await Deno.readTextFile("./config.json");
+} catch (e) {
   const url = prompt("Please specify an endpoint URL:");
 
   const modernTest = await get(url + "/api/v1/static/getScopes");
@@ -33,20 +35,22 @@ if (!localStorage.getItem("endpoint")) {
     Deno.exit(1);
   }
 
-  localStorage.setItem("endpoint", url);
+  await Deno.writeTextFile(
+    "./config.json",
+    JSON.stringify({
+      endpoint: url,
+    })
+  );
 }
 
+const config = JSON.parse(await Deno.readTextFile("./config.json"));
 debug("INFO: Using '%s' as the base URL", localStorage.getItem("endpoint"));
 
-if (!localStorage.getItem("token")) {
-  console.log(localStorage.getItem("endpoint"));
-  const token = await post(
-    localStorage.getItem("endpoint") + "/api/v1/users/login",
-    {
-      username: prompt("Username:"),
-      password: prompt("Password:"),
-    }
-  );
+if (!config.token) {
+  const token = await post(config.endpoint + "/api/v1/users/login", {
+    username: prompt("Username:"),
+    password: prompt("Password:"),
+  });
 
   if (isErr(token)) {
     handleAxiosError(
@@ -57,13 +61,10 @@ if (!localStorage.getItem("token")) {
     Deno.exit(1);
   }
 
-  localStorage.setItem("token", token.data.data.token);
-}
+  config.token = token.data.data.token;
 
-const config = {
-  endpoint: localStorage.getItem("endpoint"),
-  token: localStorage.getItem("token"),
-};
+  await Deno.writeTextFile("./config.json", JSON.stringify(config));
+}
 
 debug("INFO: Logged in. Fetching list of tunnels...");
 const tunnelRequest = await post(config.endpoint + "/api/v1/tunnels", {
