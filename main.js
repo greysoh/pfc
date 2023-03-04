@@ -9,7 +9,15 @@ import { welcome } from "./wcmsg.js";
 
 welcome();
 
-if (Deno.args.includes("--clear")) localStorage.clear(); 
+async function connectToPassyCatch(...argv) {
+  try {
+    await connectToPassy(...argv);
+  } catch (e) {
+    console.error("Unhandled error in instance %s\n\n", tunnelChoice, e);
+  }
+}
+
+if (Deno.args.includes("--clear")) localStorage.clear();
 
 if (!localStorage.getItem("endpoint")) {
   const url = prompt("Please specify an endpoint URL:");
@@ -32,10 +40,13 @@ debug("INFO: Using '%s' as the base URL", localStorage.getItem("endpoint"));
 
 if (!localStorage.getItem("token")) {
   console.log(localStorage.getItem("endpoint"));
-  const token = await post(localStorage.getItem("endpoint") + "/api/v1/users/login", {
-    username: prompt("Username:"),
-    password: prompt("Password:"),
-  });
+  const token = await post(
+    localStorage.getItem("endpoint") + "/api/v1/users/login",
+    {
+      username: prompt("Username:"),
+      password: prompt("Password:"),
+    }
+  );
 
   if (isErr(token)) {
     handleAxiosError(
@@ -51,8 +62,8 @@ if (!localStorage.getItem("token")) {
 
 const config = {
   endpoint: localStorage.getItem("endpoint"),
-  token: localStorage.getItem("token")
-}
+  token: localStorage.getItem("token"),
+};
 
 debug("INFO: Logged in. Fetching list of tunnels...");
 const tunnelRequest = await post(config.endpoint + "/api/v1/tunnels", {
@@ -83,7 +94,9 @@ for (const tunnelIndex in tunnels) {
   );
 }
 
-const tunnelChoices = prompt("\n$:").split(",").map((i) => i.trim());
+const tunnelChoices = prompt("\n$:")
+  .split(",")
+  .map((i) => i.trim());
 
 for (const tunnelChoiceUnparsed of tunnelChoices) {
   const tunnelChoice = safeParseInt(tunnelChoiceUnparsed);
@@ -92,22 +105,24 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
     console.log("Error: Your tunnel choice was out of range!");
     Deno.exit(1);
   }
-  
+
   debug("INFO: Selected tunnel index is '%s'.", tunnelChoice);
-  
+
   const tunnel = tunnels[tunnelChoice - 1];
   if (!tunnel) {
     console.log("Error: Unknown tunnel choice error.");
     Deno.exit(1);
   }
-  
+
   debug("INFO: Tunnel choice data:", tunnel);
-  
+
   // Used for detecting the URL to use
   const endpointUrlObject = new URL(config.endpoint);
-  const endpointProtocolAndHost = endpointUrlObject.origin.replace("http", "ws").split(":");
+  const endpointProtocolAndHost = endpointUrlObject.origin
+    .replace("http", "ws")
+    .split(":");
   const endpointWebsocket = endpointProtocolAndHost.slice(0, -1).join(":");
-  
+
   const url =
     tunnel.proxyUrlSettings.host !== "sameAs"
       ? tunnel.proxyUrlSettings.host
@@ -118,21 +133,27 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
             ? ":" + tunnel.proxyUrlSettings.port
             : ""
         }`;
-  
+
   debug("INFO: Built url is '%s'.", url);
-  
+
   const tunnelDestData = tunnel.dest.split(":");
-  const port = tunnelDestData.length != 2 ? safeParseInt(prompt("What port would you like to listen on?")) : tunnelDestData[1]; // TODO
-  
+  const port =
+    tunnelDestData.length != 2 ||
+    Deno.args.join(" ").includes("--force-ask-port")
+      ? safeParseInt(prompt("What port would you like to listen on?"))
+      : tunnelDestData[1]; // TODO
+
   debug("INFO: Starting...");
-  
+
   console.log("Started tunnel #%s at 'localhost:%s'", tunnelChoice, port);
-  
-  try {
-    connectToPassy(url, tunnel.passwords[0] ? tunnel.passwords[0] : prompt("What is the password for the tunnel?"), port);
-  } catch (e) {
-    console.error("Unhandled error in instance %s\n\n", tunnelChoice, e);
-  }
+
+  connectToPassyCatch(
+    url,
+    !tunnel.passwords[0] || Deno.args.join(" ").includes("--force-ask-pass")
+      ? prompt("What is the password for the tunnel?")
+      : tunnel.passwords[0],
+    port
+  );
 }
 
 while (true) {
