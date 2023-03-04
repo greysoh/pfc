@@ -17,9 +17,8 @@ async function connectToPassyCatch(...argv) {
   }
 }
 
-if (Deno.args.includes("--clear")) localStorage.clear();
-
 try {
+  if (Deno.args.includes("--clear")) throw "Nuke me";
   await Deno.readTextFile("./config.json");
 } catch (e) {
   const url = prompt("Please specify an endpoint URL:");
@@ -44,7 +43,7 @@ try {
 }
 
 const config = JSON.parse(await Deno.readTextFile("./config.json"));
-debug("INFO: Using '%s' as the base URL", localStorage.getItem("endpoint"));
+debug("INFO: Using '%s' as the base URL", config.endpoint);
 
 if (!config.token) {
   const token = await post(config.endpoint + "/api/v1/users/login", {
