@@ -11,3 +11,11 @@ And if you want to compile it:
 ```bash
 $ deno compile --allow-read --allow-write --allow-net main.js
 ```
+## Help
+`--debug`: Returns debug messages, useful for debugging or error reporting  
+  
+`--clear`: Resets the database  
+`--force-ask-port`: Forces pfC to ask you to choose a port  
+`--force-ask-pass`: Forces pfC to ask you to input a password  
+  
+`--libpassy-mitm`: Allows you to snoop traffic (debug must be enabled to show messages) `//TODO,  add`

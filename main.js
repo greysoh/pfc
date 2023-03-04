@@ -9,6 +9,9 @@ import { welcome } from "./wcmsg.js";
 
 welcome();
 
+debug("HELLO: o7 from Indiana");
+debug("INFO: CLI options specified are '%s'", Deno.args.join(" "));
+
 async function connectToPassyCatch(...argv) {
   try {
     await connectToPassy(...argv);
@@ -66,6 +69,7 @@ if (!config.token) {
 }
 
 debug("INFO: Logged in. Fetching list of tunnels...");
+debug("INFO: Using '%s' as the token", config.token);
 const tunnelRequest = await post(config.endpoint + "/api/v1/tunnels", {
   token: config.token,
 });

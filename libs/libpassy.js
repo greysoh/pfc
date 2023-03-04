@@ -4,8 +4,6 @@ import { Buffer } from "https://deno.land/std@0.173.0/node/buffer.ts";
 
 import { debug } from "./debug-log.js";
 
-// TODO: sacrifice my soul to Deno (DONE)
-
 /**
  * Connect to a passy server, and expose a TCP server.
  * With no verify, it doesn't verify that this is a passy server,
@@ -16,7 +14,9 @@ import { debug } from "./debug-log.js";
  * @param {string} password Password to use
  * @param {number} port Port to listen on
  */
-export async function connectToPassyNoVerify(url, password, port) {
+export async function connectToPassyNoVerify(url, password, port, internalHasOffset) {
+  if (internalHasOffset) console.log("INFO: Tunnel with URL '%s' has had to offset its port. The new port is %s.", url, port);
+
   const server = new Server();
   server.listen(port);
 
@@ -51,8 +51,8 @@ export async function connectToPassyNoVerify(url, password, port) {
     })
 
     wss.on("open", function () {
-      wss.on("message", async function (dataa) {
-        const data = dataa.data; // yo dawg i heard you like data so i datad your data
+      wss.on("message", async function (rawData) {
+        const data = rawData.data; // yo dawg i heard you like data so i datad your data
         const strData = data.toString();
 
         if (!isReady) {
@@ -86,11 +86,13 @@ export async function connectToPassyNoVerify(url, password, port) {
 
   server.on("error", (e) => {
     if (e.code === "EADDRINUSE") {
-      debug("Address in use, retrying...");
+      debug("Address in use, retrying with port offset of 1...");
 
-      setTimeout(() => {
+      setTimeout(async() => {
         server.close();
-        server.listen(port);
+        wss.close();
+
+        await connectToPassyNoVerify(url, password, port+1, true);
       }, 1000);
     } else {
       throw "Internal server error\n\n" + e;
