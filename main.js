@@ -49,9 +49,11 @@ const config = JSON.parse(await Deno.readTextFile("./config.json"));
 debug("INFO: Using '%s' as the base URL", config.endpoint);
 
 if (!config.token) {
+  const enableGuestAccess = prompt("(y/n) Would you like to log in as a guest?").toString().toLowerCase().startsWith("y");
+
   const token = await post(config.endpoint + "/api/v1/users/login", {
-    username: prompt("Username:"),
-    password: prompt("Password:"),
+    username: enableGuestAccess ? "guest" : prompt("Username:"),
+    password: enableGuestAccess ? "guest" : prompt("Password:"),
   });
 
   if (isErr(token)) {
