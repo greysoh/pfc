@@ -30,10 +30,11 @@ try {
 
   if (isErr(modernTest)) {
     handleAxiosError(
-      token.response.status,
-      token.response.statusText,
-      token.response.data.error
+      modernTest.response.status,
+      modernTest.response.statusText,
+      modernTest.response.data.error
     );
+
     Deno.exit(1);
   }
 
@@ -62,6 +63,14 @@ if (!config.token) {
       token.response.statusText,
       token.response.data.error
     );
+
+    if (enableGuestAccess) {
+      console.log("\nDetected failure. Guest access is most likely not enabled.");
+      console.log("If you want guest access to be enabled, go to the users tab in the Passyfire WebUI and click 'Enable Guest Access'.");
+      console.log("If you do not see the option, you either need to update Passyfire, or manually add the guest user.");
+      console.log("To do that, add a user with the username and password both set to 'guest'.");
+    }
+
     Deno.exit(1);
   }
 
@@ -70,18 +79,22 @@ if (!config.token) {
   await Deno.writeTextFile("./config.json", JSON.stringify(config));
 }
 
-debug("INFO: Logged in. Fetching list of tunnels...");
 debug("INFO: Using '%s' as the token", config.token);
+debug("INFO: Logged in. Fetching list of tunnels...");
 const tunnelRequest = await post(config.endpoint + "/api/v1/tunnels", {
   token: config.token,
 });
 
 if (isErr(tunnelRequest)) {
   handleAxiosError(
-    token.response.status,
-    token.response.statusText,
-    token.response.data.error
+    tunnelRequest.response.status,
+    tunnelRequest.response.statusText,
+    tunnelRequest.response.data.error
   );
+
+  console.log("\nSee 'Code \"TunnelRequest\" Debugging' on the GitHub page on how to address this issue.");
+
+  Deno.exit(1);
 }
 
 const tunnels = tunnelRequest.data.data;
