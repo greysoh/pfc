@@ -52,10 +52,12 @@ debug("INFO: Using '%s' as the base URL", config.endpoint);
 if (!config.token) {
   const enableGuestAccess = prompt("(y/n) Would you like to log in as a guest?").toString().toLowerCase().startsWith("y");
 
-  const token = await post(config.endpoint + "/api/v1/users/login", {
+  const tokenArgs = {
     username: enableGuestAccess ? "guest" : prompt("Username:"),
     password: enableGuestAccess ? "guest" : prompt("Password:"),
-  });
+  }
+
+  const token = await post(config.endpoint + "/api/v1/users/login", tokenArgs);
 
   if (isErr(token)) {
     handleAxiosError(
@@ -76,6 +78,9 @@ if (!config.token) {
 
   config.token = token.data.data.token;
 
+  const saveLoginForRenewal = prompt("(y/n) Would you like to save your username and password for token renewal, if needed?").toString().toLowerCase().startsWith("y");
+  if (saveLoginForRenewal) config.loginDetails = tokenArgs;
+
   await Deno.writeTextFile("./config.json", JSON.stringify(config));
 }
 
@@ -91,6 +96,31 @@ if (isErr(tunnelRequest)) {
     tunnelRequest.response.statusText,
     tunnelRequest.response.data.error
   );
+
+  if (config.loginDetails) {
+    console.log("\nAttempting to fix the problem...");
+    
+    const token = await post(config.endpoint + "/api/v1/users/login", config.loginDetails);
+
+    if (isErr(token)) {
+      handleAxiosError(
+        token.response.status,
+        token.response.statusText,
+        token.response.data.error
+      )
+
+      console.log("\nFailed to automatically fix the problem.");
+      console.log("See 'Code \"TunnelRequest\" Debugging' on the GitHub page on how to address this issue.");
+      Deno.exit(1);
+    }
+
+    console.log("Success. Saving new token...");
+    config.token = token.data.data.token;
+    
+    await Deno.writeTextFile("./config.json", JSON.stringify(config));
+
+    console.log("You may restart the app.");
+  }
 
   console.log("\nSee 'Code \"TunnelRequest\" Debugging' on the GitHub page on how to address this issue.");
 
