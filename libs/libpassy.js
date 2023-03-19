@@ -1,7 +1,7 @@
 import { StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
 
-import { Buffer } from "node:buffer"; 
-import { Server } from "node:net";
+import { Server } from "https://deno.land/std@0.177.0/node/net.ts";
+import { Buffer } from "https://deno.land/std@0.177.0/node/buffer.ts";
 
 import { createSocketCore } from "./internal/TCPishUDP.js";
 import { debug } from "./debug-log.js";
@@ -24,7 +24,6 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
   const server = isUDP ? createSocketCore("udp4") : new Server();
 
   server.on("connection", function (socket) {
-    console.log(isUDP);
     debug(
       "DEBUG (%s): CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort, isUDP ? "UDP" : "TCP"
     );
