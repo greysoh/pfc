@@ -201,7 +201,8 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
     !tunnel.passwords[0] || Deno.args.join(" ").includes("--force-ask-pass")
       ? prompt("What is the password for the tunnel?")
       : tunnel.passwords[0],
-    port
+    port,
+    tunnel.proxyUrlSettings.protocol == "UDP"
   );
 }
 

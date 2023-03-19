@@ -1,13 +1,12 @@
 import { StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
 
 import { Buffer } from "node:buffer"; 
-import { Server } from "node:net";
+import { createSocket } from "node:dgram";
 
-import * as udpassy from "./libpassyUDP.js";
 import { debug } from "./debug-log.js";
 
 /**
- * Connect to a passy server, and expose a TCP server.
+ * Connect to a passy server, and expose a UDP server.
  * With no verify, it doesn't verify that this is a passy server,
  * and is therefore prone to crashes and errors.
  * 
@@ -15,22 +14,15 @@ import { debug } from "./debug-log.js";
  * @param {string} url URL to attempt to connect to
  * @param {string} password Password to use
  * @param {number} port Port to listen on
- * @param {boolean} isUDP Set to true if you want to create a UDP server 
  */
-export async function connectToPassyNoVerify(url, password, port, isUDP, internalHasOffset) {
+export async function connectToPassyNoVerify(url, password, port, internalHasOffset) {
   if (internalHasOffset) console.log("INFO: Tunnel with URL '%s' has had to offset its port. The new port is %s.", url, port);
-  if (isUDP) {
-    return await udpassy.connectToPassyNoVerify(url, password, port, internalHasOffset);
-  }
 
-  const server = new Server();
-  server.listen(port);
+  throw new Error("PANIC: Attempted to load unsupported mode (TCPv4)");
+
+  const server = createSocket("udp4");
 
   server.on("connection", function (socket) {
-    debug(
-      "DEBUG: CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort
-    );
-
     let isReady = false;
     const bufferPackets = [];
 
@@ -98,7 +90,7 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
         server.close();
         wss.close();
 
-        await connectToPassyNoVerify(url, password, port+1, isUDP, true);
+        await connectToPassyNoVerify(url, password, port+1, true);
       }, 1000);
     } else {
       throw "Internal server error\n\n" + e;
@@ -107,18 +99,15 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
 }
 
 /**
- * Connect to a passy server, and expose a TCP server.
+ * Connect to a passy server, and expose a UDP server.
  * This version verifies that this is a passy server
  * @param {string} url URL to attempt to connect to
  * @param {string} password Password to use
  * @param {number} port Port to listen on
  * @param {boolean} isUDP Set to true if you want to create a UDP server
  */
-export async function connectToPassy(url, password, port, isUDP) {
+export async function connectToPassy(url, password, port) {
   const wss = new StandardWebSocketClient(url);
-  if (isUDP) {
-    return await udpassy.connectToPassy(url, password, port);
-  }
 
   wss.on("open", async function () {
     wss.send("Accept: IsPassedWS");
@@ -136,7 +125,7 @@ export async function connectToPassy(url, password, port, isUDP) {
         if (!check) {
           throw "Invalid password!";
         } else {
-          await connectToPassyNoVerify(url, password, port, isUDP);
+          await connectToPassyNoVerify(url, password, port);
         }
       }
     });
