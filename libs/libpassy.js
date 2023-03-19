@@ -3,7 +3,7 @@ import { StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mo
 import { Buffer } from "node:buffer"; 
 import { Server } from "node:net";
 
-import * as udpassy from "./libpassyUDP.js";
+import { createSocketCore } from "./internal/TCPishUDP.js";
 import { debug } from "./debug-log.js";
 
 /**
@@ -19,16 +19,14 @@ import { debug } from "./debug-log.js";
  */
 export async function connectToPassyNoVerify(url, password, port, isUDP, internalHasOffset) {
   if (internalHasOffset) console.log("INFO: Tunnel with URL '%s' has had to offset its port. The new port is %s.", url, port);
-  if (isUDP) {
-    return await udpassy.connectToPassyNoVerify(url, password, port, internalHasOffset);
-  }
+  if (isUDP) debug("INFO: Bad time detected. (Detected TCP request enabled)")
 
-  const server = new Server();
-  server.listen(port);
+  const server = isUDP ? createSocketCore("udp4") : new Server();
 
   server.on("connection", function (socket) {
+    console.log(isUDP);
     debug(
-      "DEBUG: CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort
+      "DEBUG (%s): CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort, isUDP ? "UDP" : "TCP"
     );
 
     let isReady = false;
@@ -104,6 +102,8 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
       throw "Internal server error\n\n" + e;
     }
   });
+
+  server.listen(port);
 }
 
 /**
@@ -116,9 +116,6 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
  */
 export async function connectToPassy(url, password, port, isUDP) {
   const wss = new StandardWebSocketClient(url);
-  if (isUDP) {
-    return await udpassy.connectToPassy(url, password, port);
-  }
 
   wss.on("open", async function () {
     wss.send("Accept: IsPassedWS");
