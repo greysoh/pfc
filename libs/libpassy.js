@@ -1,7 +1,9 @@
 import { StandardWebSocketClient } from "https://deno.land/x/websocket@v0.1.4/mod.ts";
-import { Server } from "https://deno.land/std@0.170.0/node/net.ts";
-import { Buffer } from "https://deno.land/std@0.173.0/node/buffer.ts";
 
+import { Server } from "https://deno.land/std@0.177.0/node/net.ts";
+import { Buffer } from "https://deno.land/std@0.177.0/node/buffer.ts";
+
+import { createSocketCore } from "./internal/TCPishUDP.js";
 import { debug } from "./debug-log.js";
 
 /**
@@ -13,16 +15,17 @@ import { debug } from "./debug-log.js";
  * @param {string} url URL to attempt to connect to
  * @param {string} password Password to use
  * @param {number} port Port to listen on
+ * @param {boolean} isUDP Set to true if you want to create a UDP server 
  */
-export async function connectToPassyNoVerify(url, password, port, internalHasOffset) {
+export async function connectToPassyNoVerify(url, password, port, isUDP, internalHasOffset) {
   if (internalHasOffset) console.log("INFO: Tunnel with URL '%s' has had to offset its port. The new port is %s.", url, port);
+  if (isUDP) debug("INFO: Bad time detected. (Detected TCP request enabled)")
 
-  const server = new Server();
-  server.listen(port);
+  const server = isUDP ? createSocketCore("udp4") : new Server();
 
   server.on("connection", function (socket) {
     debug(
-      "DEBUG: CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort
+      "DEBUG (%s): CONNECTED: " + socket.remoteAddress + ":" + socket.remotePort, isUDP ? "UDP" : "TCP"
     );
 
     let isReady = false;
@@ -92,12 +95,14 @@ export async function connectToPassyNoVerify(url, password, port, internalHasOff
         server.close();
         wss.close();
 
-        await connectToPassyNoVerify(url, password, port+1, true);
+        await connectToPassyNoVerify(url, password, port+1, isUDP, true);
       }, 1000);
     } else {
       throw "Internal server error\n\n" + e;
     }
   });
+
+  server.listen(port);
 }
 
 /**
@@ -106,8 +111,9 @@ export async function connectToPassyNoVerify(url, password, port, internalHasOff
  * @param {string} url URL to attempt to connect to
  * @param {string} password Password to use
  * @param {number} port Port to listen on
+ * @param {boolean} isUDP Set to true if you want to create a UDP server
  */
-export async function connectToPassy(url, password, port) {
+export async function connectToPassy(url, password, port, isUDP) {
   const wss = new StandardWebSocketClient(url);
 
   wss.on("open", async function () {
@@ -126,7 +132,7 @@ export async function connectToPassy(url, password, port) {
         if (!check) {
           throw "Invalid password!";
         } else {
-          await connectToPassyNoVerify(url, password, port);
+          await connectToPassyNoVerify(url, password, port, isUDP);
         }
       }
     });
