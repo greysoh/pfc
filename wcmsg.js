@@ -13,6 +13,6 @@ _|
   const user = "color: blue; font-weight: bold";
   const bold = "font-weight: bold;"
 
-  console.log("      passyfire Client | UDP TEST BUILD")
+  console.log("      passyfire Client")
   console.log("%cWritten by @%cgreysoh%c on GitHub\n", bold, user, bold);
 }
