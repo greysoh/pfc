@@ -12,14 +12,6 @@ welcome();
 debug("HELLO: o7 from Indiana");
 debug("INFO: CLI options specified are '%s'", Deno.args.join(" "));
 
-async function connectToPassyCatch(...argv) {
-  try {
-    await connectToPassy(...argv);
-  } catch (e) {
-    console.error("Unhandled error in instance %s\n\n", tunnelChoice, e);
-  }
-}
-
 try {
   if (Deno.args.includes("--clear")) throw "Nuke me";
   await Deno.readTextFile("./config.json");
@@ -196,7 +188,7 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
 
   console.log("Started tunnel #%s at 'localhost:%s'", tunnelChoice, port);
 
-  connectToPassyCatch(
+  connectToPassy(
     url,
     !tunnel.passwords[0] || Deno.args.join(" ").includes("--force-ask-pass")
       ? prompt("What is the password for the tunnel?")
