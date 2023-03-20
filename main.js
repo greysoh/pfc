@@ -172,8 +172,6 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
     .split(":");
   const endpointWebsocket = endpointProtocolAndHost.slice(0, -1).join(":");
 
-  console.log(tunnel.proxyUrlSettings.host.split(""));
-
   const url =
     tunnel.proxyUrlSettings.host !== "sameAs"
       ? tunnel.proxyUrlSettings.host

@@ -75,7 +75,7 @@ export function createSocketCore(typeOf) {
 
   return {
     listen: (port) => server.bind(port),
-    close: () => server.close(),
+    end: () => server.close(),
     on: (type, func) => {
       if (type == "error") server.on("error", func);
       if (type == "connection") evtList.push({ type, func });
