@@ -41,6 +41,26 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
       wss.close();
     });
 
+    // Error handling data
+    socket.on("error", function(e) {
+      debug(
+        "DEBUG (%S): Error Recieved (client-data: '%s:%s'),",
+        isUDP ? "UDP" : "TCP",
+        socket.remoteAddress,
+        socket.remotePort,
+        e
+      )
+    });
+    
+    wss.on("error", function(e) {
+      debug(
+        "DEBUG (WebSocket): Error Recieved (client-data: '%s:%s'),",
+        socket.remoteAddress,
+        socket.remotePort,
+        e
+      )
+    });
+
     socket.on("data", (data) => {
       if (!isReady) {
         bufferPackets.push(data);
@@ -48,10 +68,6 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
         wss.send(data);
       }
     });
-
-    wss.on("error", function(err) {
-      if (err) console.error(err);
-    })
 
     wss.on("open", function () {
       wss.on("message", async function (rawData) {
