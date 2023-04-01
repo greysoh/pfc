@@ -44,7 +44,7 @@ export async function connectToPassyNoVerify(url, password, port, isUDP, interna
     // Error handling data
     socket.on("error", function(e) {
       debug(
-        "DEBUG (%S): Error Recieved (client-data: '%s:%s'),",
+        "DEBUG (%s): Error Recieved (client-data: '%s:%s'),",
         isUDP ? "UDP" : "TCP",
         socket.remoteAddress,
         socket.remotePort,
