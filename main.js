@@ -165,15 +165,9 @@ for (const tunnelChoiceUnparsed of tunnelChoices) {
   const endpointWebsocket = endpointProtocolAndHost.slice(0, -1).join(":");
 
   const url =
-    tunnel.proxyUrlSettings.host !== "sameAs"
+    tunnel.proxyUrlSettings.host != "sameAs"
       ? tunnel.proxyUrlSettings.host
-      : endpointWebsocket +
-        `${
-          tunnel.proxyUrlSettings.port != 80 &&
-          tunnel.proxyUrlSettings.port != 443
-            ? ":" + tunnel.proxyUrlSettings.port
-            : ""
-        }`;
+      : endpointWebsocket + ":" + tunnel.proxyUrlSettings.port;
 
   debug("INFO: Built url is '%s'.", url);
 
